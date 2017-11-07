@@ -1,0 +1,42 @@
+  # gets a url page and breaks it to pieces      
+
+page = requests.get("http://forecast.weather.gov/MapClick.php?lat=37.7772&lon=-122.4168")
+soup = BeautifulSoup(page.content, 'html.parser')
+seven_day = soup.find(id="seven-day-forecast")
+forecast_items = seven_day.find_all(class_="tombstone-container")
+period_tags = seven_day.select(".tombstone-container .period-name")
+periods = [pt.get_text() for pt in period_tags]
+print (periods)
+short_descs = [sd.get_text() for sd in seven_day.select(".tombstone-container .short-desc")]
+temps = [t.get_text() for t in seven_day.select(".tombstone-container .temp")]
+descs = [d["title"] for d in seven_day.select(".tombstone-container img")]
+
+
+
+print(short_descs)
+print(temps)
+print(descs)
+print "*" * 100
+
+ #Here I use  the panda  library to make it as a database that i can use it for analysing the data 
+weather = pd.DataFrame({
+        "period": periods, 
+        "short_desc": short_descs, 
+        "temp": temps, 
+        "desc":descs
+    })
+weather
+
+
+temperature_nums = weather["temp"].str.extract("(?P<temp_num>\d+)", expand=False)
+weather["temperature_num"] = temperature_nums.astype("int")
+print temperature_nums
+
+# gives me the temperature of each day and the average of the week  
+print weather["temperature_num"].mean()
+print "*" * 100
+is_night = weather["temp"].str.contains("Low")
+weather["is_night"] = is_night
+print is_night
+print "*" * 100
+print weather[is_night]
